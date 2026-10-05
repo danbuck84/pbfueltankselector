@@ -1,41 +1,65 @@
-# 🛩️ Cirrus SR22T G6 Fuel Tank Timer
+# 🛩️ Fuel Tank Timer — MSFS 2020
 
-A sleek, browser-based timer app designed for **Microsoft Flight Simulator 2020** pilots to effectively manage fuel tank switching on the Cirrus SR22T G6.
+A sleek, installable web app (PWA) that reminds **Microsoft Flight Simulator 2020** pilots to switch fuel tanks — and, in Advanced Mode, tracks fuel per tank so you can keep the wings balanced.
+
+**Live:** https://pbfueltankselector.netlify.app/
 
 ## 🌟 Features
 
-- **Visual Fuel Selector**: A beautifully designed, dark-themed interface mimicking the SR22T's center console.
-- **Custom Intervals**: Set your preferred switch interval (in 5-minute increments) with no upper limit.
-- **Drift-Compensated Timer**: Ensures accurate timekeeping even if the browser throttles background tabs.
-- **Cockpit-Style Alerts**: Uses the Web Audio API to generate a repeating two-tone beep (similar to aircraft avionics warnings) alongside a full-screen red flashing visual alert.
-- **Smart Auto-Switch**: Acknowledging the alarm automatically flips the virtual selector to the other tank and restarts the countdown.
-- **Flight Stats**: Tracks total elapsed flight time and the number of tank switches.
-- **Keyboard Shortcuts**: Quickly interact without clicking:
-  - `Space`: Pause/Resume or Acknowledge Alarm
-  - `Esc`: Stop Timer
+### Basic Mode
+- **Visual fuel selector** styled after the Cirrus SR22T G6 center console.
+- **Custom interval** in 5-minute steps, no upper limit.
+- **Cockpit-style alarm**: repeating two-tone beep, full-screen red flash and vibration.
+- **Auto-switch**: acknowledging the alarm flips the selector and restarts the countdown.
 
-## 🚀 Getting Started
+### Advanced Mode
+- **Aircraft profiles**: Cirrus SR22T G6, Cessna 172S (with **BOTH**), Beechcraft G36 Bonanza.
+- **Live fuel tracking**: set fuel on board and fuel flow (GPH); the app burns fuel from the selected tank in real time.
+- **Imbalance + endurance**: see which tank is fuller, total fuel and time to empty.
+- **In-flight adjustments**: change GPH after leaning, or **Sync fuel with sim** to correct the numbers from the MFD.
+- **Auto-balance**: at each reminder the app picks the fuller tank. It will keep you on the same tank for extra cycles when needed (e.g. after a rich climb on one side).
+- **Manual switch**: tap any tank on the panel to switch right away; the cycle restarts.
+- **Fuel pump reminder** (SR22T boost pump / G36 aux pump): ON 30 s before the switch, OFF 30 s after.
+- **Stay option** on the alarm if you want to keep the current tank.
 
-Since this app is built with pure Vanilla HTML, CSS, and JavaScript, there are no dependencies to install or build steps to run!
+### Everywhere
+- **Screen Wake Lock**: the screen stays on while the timer runs (when the browser supports it).
+- **Background alerts**: if the app is in the background when the timer ends, you get a system notification.
+- **Survives restarts**: the flight is saved locally, so if the OS closes the app it picks up where it left off.
+- **Works offline** after the first visit.
+- **Keyboard shortcuts**: `Space` = pause/resume or switch on alarm, `Esc` = stop.
 
-### Local Usage
-1. Clone the repository or download the source code.
-2. Open `index.html` directly in your favorite web browser.
+## 📱 Install on your phone
+- **iOS (Safari)**: Share → **Add to Home Screen**. Notifications on iOS require the installed app (iOS 16.4+).
+- **Android (Chrome)**: menu → **Install app** (or accept the install prompt).
 
-### Web Hosting (e.g., Netlify)
-This project is ready to be hosted on static site platforms like **Netlify**, **Vercel**, or **GitHub Pages**. Simply link this repository to your hosting provider, and it will serve out of the box.
+> **Background note:** mobile systems pause web apps in the background, especially iOS. Notifications are best-effort: Android/desktop usually deliver them; on iOS keep the app open (Wake Lock keeps the screen on) for a reliable alarm. Turn off the iPhone silent switch to hear the beep.
+
+## 🚀 Development
+Plain HTML, CSS and JavaScript — no build step, no dependencies.
+
+```
+index.html     markup
+styles.css     styles
+app.js         timer, fuel tracking, alarms, wake lock, notifications
+sw.js          service worker (network-first, offline fallback)
+manifest.json  PWA manifest
+icons/         app icons and favicon
+```
+
+Run locally with any static server (service workers need `http://`, not `file://`):
+
+```bash
+npx serve .
+```
+
+Adding an aircraft: add an entry to `AIRCRAFT` at the top of `app.js`. When you change cached files, bump `CACHE_NAME` in `sw.js`.
 
 ## 🛣️ Roadmap
-
-- [ ] **Mobile First PWA**: Convert into a Progressive Web App so it can be installed natively on mobile devices or tablets for use alongside your flight simulator setup.
-- [ ] **Extended Aircraft Support**: Add visual layouts for other popular general aviation aircraft.
-
-## 💻 Tech Stack
-
-- **HTML5** & **CSS3** (Animations, Custom styling)
-- **Vanilla JavaScript** (State machine, Timer logic)
-- **Web Audio API** (Procedural sound generation, zero external assets)
+- [x] Mobile-first PWA
+- [x] Multiple aircraft profiles
+- [ ] More aircraft
+- [ ] Optional Web Push server for reliable background alerts on iOS
 
 ## 🤝 Contributing
-
-Feel free to open issues or submit pull requests if you have ideas for new features or improvements. Happy flying!
+Issues and pull requests are welcome. Happy flying!

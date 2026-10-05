@@ -2,617 +2,137 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Fuel Tank Timer — Cirrus SR22T G6</title>
-  
+
   <!-- PWA Meta Tags -->
   <meta name="theme-color" content="#111113">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Fuel Timer">
   <link rel="manifest" href="manifest.json">
-  <link rel="icon" type="image/jpeg" href="favicon.jpg">
-  <link rel="apple-touch-icon" href="app_icon.jpg">
-  <style>
-    /* ───────────────────────── Reset & Base ───────────────────────── */
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 
-    :root {
-      --bg-dark: #111113;
-      --bg-panel: #1c1c1f;
-      --bg-surface: #26262a;
-      --bg-elevated: #303036;
-      --text-primary: #e8e8ec;
-      --text-secondary: #9d9da5;
-      --text-dim: #5e5e66;
-      --accent-red: #e03030;
-      --accent-red-glow: #ff4444;
-      --accent-green: #2ecc71;
-      --accent-blue: #3498db;
-      --accent-amber: #f0a030;
-      --border-color: #3a3a40;
-      --radius: 10px;
-      --font-mono: 'SF Mono', 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
-      --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-    }
-
-    html, body {
-      height: 100%;
-      font-family: var(--font-sans);
-      background: var(--bg-dark);
-      color: var(--text-primary);
-      overflow: hidden;
-      user-select: none;
-      -webkit-user-select: none;
-    }
-
-    /* ───────────────────────── Screens ───────────────────────── */
-    .screen {
-      display: none;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100%;
-      width: 100%;
-      padding: 24px;
-      position: absolute;
-      top: 0;
-      left: 0;
-    }
-
-    .screen.active { display: flex; }
-
-    /* ───────────────────────── Setup Screen ───────────────────────── */
-    .setup-header {
-      text-align: center;
-      margin-bottom: 40px;
-    }
-
-    .setup-header h1 {
-      font-size: 22px;
-      font-weight: 700;
-      letter-spacing: 0.5px;
-      margin-bottom: 6px;
-    }
-
-    .setup-header .subtitle {
-      font-size: 13px;
-      color: var(--text-secondary);
-      letter-spacing: 1px;
-      text-transform: uppercase;
-    }
-
-    .setup-section {
-      width: 100%;
-      max-width: 360px;
-      margin-bottom: 32px;
-    }
-
-    .setup-section label {
-      display: block;
-      font-size: 11px;
-      font-weight: 600;
-      letter-spacing: 1.5px;
-      text-transform: uppercase;
-      color: var(--text-secondary);
-      margin-bottom: 12px;
-      text-align: center;
-    }
-
-    /* Tank Selector Buttons */
-    .tank-selector {
-      display: flex;
-      gap: 12px;
-    }
-
-    .tank-btn {
-      flex: 1;
-      padding: 18px 12px;
-      border: 2px solid var(--border-color);
-      border-radius: var(--radius);
-      background: var(--bg-surface);
-      color: var(--text-secondary);
-      font-family: var(--font-sans);
-      font-size: 16px;
-      font-weight: 700;
-      letter-spacing: 1px;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      text-align: center;
-    }
-
-    .tank-btn:hover { border-color: var(--text-dim); }
-
-    .tank-btn.selected {
-      border-color: var(--accent-green);
-      background: rgba(46, 204, 113, 0.1);
-      color: var(--accent-green);
-      box-shadow: 0 0 20px rgba(46, 204, 113, 0.15);
-    }
-
-    .tank-btn .tank-label { display: block; }
-    .tank-btn .tank-detail {
-      display: block;
-      font-size: 9px;
-      font-weight: 400;
-      letter-spacing: 0.5px;
-      margin-top: 4px;
-      opacity: 0.7;
-    }
-
-    /* Interval Stepper */
-    .interval-stepper {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 16px;
-    }
-
-    .stepper-btn {
-      width: 48px;
-      height: 48px;
-      border-radius: 50%;
-      border: 2px solid var(--border-color);
-      background: var(--bg-surface);
-      color: var(--text-primary);
-      font-size: 22px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.15s ease;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-family: var(--font-sans);
-    }
-
-    .stepper-btn:hover { border-color: var(--accent-blue); background: var(--bg-elevated); }
-    .stepper-btn:active { transform: scale(0.93); }
-
-    .interval-display {
-      min-width: 100px;
-      text-align: center;
-    }
-
-    .interval-display .value {
-      font-family: var(--font-mono);
-      font-size: 36px;
-      font-weight: 700;
-      color: var(--text-primary);
-      line-height: 1;
-    }
-
-    .interval-display .unit {
-      font-size: 12px;
-      color: var(--text-secondary);
-      letter-spacing: 1px;
-      text-transform: uppercase;
-      margin-top: 4px;
-    }
-
-    /* Start Button */
-    .start-btn {
-      width: 100%;
-      max-width: 360px;
-      padding: 18px;
-      border: none;
-      border-radius: var(--radius);
-      background: var(--accent-green);
-      color: #fff;
-      font-family: var(--font-sans);
-      font-size: 16px;
-      font-weight: 700;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-      cursor: pointer;
-      transition: all 0.15s ease;
-      margin-top: 8px;
-    }
-
-    .start-btn:hover { background: #27ae60; }
-    .start-btn:active { transform: scale(0.97); }
-
-    /* ───────────────────────── Timer Screen ───────────────────────── */
-    .timer-screen-content {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 24px;
-      width: 100%;
-      max-width: 400px;
-    }
-
-    /* Fuel Selector Panel */
-    .fuel-panel {
-      width: 100%;
-      background: var(--bg-panel);
-      border-radius: 14px;
-      border: 1px solid var(--border-color);
-      padding: 20px;
-      position: relative;
-      box-shadow:
-        0 4px 24px rgba(0, 0, 0, 0.4),
-        inset 0 1px 0 rgba(255, 255, 255, 0.03);
-    }
-
-    .fuel-panel-title {
-      text-align: center;
-      font-size: 10px;
-      font-weight: 600;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      color: var(--text-dim);
-      margin-bottom: 16px;
-    }
-
-    .fuel-tanks {
-      display: flex;
-      gap: 12px;
-      position: relative;
-    }
-
-    .fuel-tank {
-      flex: 1;
-      border: 2px solid var(--border-color);
-      border-radius: 10px;
-      padding: 16px 12px;
-      text-align: center;
-      transition: all 0.4s ease;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .fuel-tank::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      border-radius: 8px;
-      opacity: 0;
-      transition: opacity 0.4s ease;
-    }
-
-    .fuel-tank.active {
-      border-color: var(--accent-green);
-      box-shadow: 0 0 30px rgba(46, 204, 113, 0.2);
-    }
-
-    .fuel-tank.active::before {
-      background: linear-gradient(180deg, rgba(46, 204, 113, 0.08) 0%, rgba(46, 204, 113, 0.02) 100%);
-      opacity: 1;
-    }
-
-    .fuel-tank.inactive {
-      border-color: var(--bg-elevated);
-      opacity: 0.4;
-    }
-
-    .fuel-tank .tank-name {
-      font-size: 20px;
-      font-weight: 800;
-      letter-spacing: 2px;
-      position: relative;
-      z-index: 1;
-    }
-
-    .fuel-tank.active .tank-name { color: var(--accent-green); }
-    .fuel-tank.inactive .tank-name { color: var(--text-dim); }
-
-    .fuel-tank .tank-capacity {
-      font-size: 9px;
-      letter-spacing: 0.5px;
-      color: var(--text-dim);
-      margin-top: 6px;
-      position: relative;
-      z-index: 1;
-    }
-
-    .fuel-tank .active-badge {
-      display: none;
-      margin-top: 10px;
-      font-size: 9px;
-      font-weight: 700;
-      letter-spacing: 1.5px;
-      text-transform: uppercase;
-      color: var(--accent-green);
-      position: relative;
-      z-index: 1;
-    }
-
-    .fuel-tank.active .active-badge { display: block; }
-
-    /* Fuel Selector Handle */
-    .fuel-handle-container {
-      display: flex;
-      justify-content: center;
-      margin-top: 16px;
-      position: relative;
-      height: 40px;
-    }
-
-    .fuel-handle-track {
-      width: 60%;
-      height: 4px;
-      background: var(--bg-elevated);
-      border-radius: 2px;
-      position: absolute;
-      top: 50%;
-      transform: translateY(-50%);
-    }
-
-    .fuel-handle {
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, #c0392b, #e74c3c);
-      border: 3px solid #a93226;
-      position: absolute;
-      top: 50%;
-      transform: translateY(-50%);
-      transition: left 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
-      box-shadow:
-        0 2px 8px rgba(0, 0, 0, 0.4),
-        inset 0 1px 2px rgba(255, 255, 255, 0.2);
-    }
-
-    .fuel-handle.left { left: calc(25% - 18px); }
-    .fuel-handle.right { left: calc(75% - 18px); }
-
-    /* Countdown Timer */
-    .countdown-container {
-      text-align: center;
-    }
-
-    .countdown-label {
-      font-size: 11px;
-      font-weight: 600;
-      letter-spacing: 1.5px;
-      text-transform: uppercase;
-      color: var(--text-secondary);
-      margin-bottom: 8px;
-    }
-
-    .countdown-value {
-      font-family: var(--font-mono);
-      font-size: 72px;
-      font-weight: 700;
-      color: var(--text-primary);
-      line-height: 1;
-      letter-spacing: 2px;
-      transition: color 0.3s ease;
-    }
-
-    .countdown-value.warning { color: var(--accent-amber); }
-    .countdown-value.critical { color: var(--accent-red); animation: pulse-text 1s infinite; }
-
-    @keyframes pulse-text {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.5; }
-    }
-
-    /* Stats Row */
-    .stats-row {
-      display: flex;
-      gap: 24px;
-      justify-content: center;
-    }
-
-    .stat-item {
-      text-align: center;
-    }
-
-    .stat-value {
-      font-family: var(--font-mono);
-      font-size: 18px;
-      font-weight: 700;
-      color: var(--text-primary);
-    }
-
-    .stat-label {
-      font-size: 9px;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-      color: var(--text-dim);
-      margin-top: 2px;
-    }
-
-    /* Timer Controls */
-    .timer-controls {
-      display: flex;
-      gap: 12px;
-      width: 100%;
-    }
-
-    .ctrl-btn {
-      flex: 1;
-      padding: 16px;
-      border: 2px solid var(--border-color);
-      border-radius: var(--radius);
-      background: var(--bg-surface);
-      color: var(--text-primary);
-      font-family: var(--font-sans);
-      font-size: 14px;
-      font-weight: 700;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-      cursor: pointer;
-      transition: all 0.15s ease;
-    }
-
-    .ctrl-btn:hover { border-color: var(--text-dim); background: var(--bg-elevated); }
-    .ctrl-btn:active { transform: scale(0.97); }
-
-    .ctrl-btn.pause { border-color: var(--accent-amber); color: var(--accent-amber); }
-    .ctrl-btn.pause:hover { background: rgba(240, 160, 48, 0.1); }
-
-    .ctrl-btn.stop { border-color: var(--accent-red); color: var(--accent-red); }
-    .ctrl-btn.stop:hover { background: rgba(224, 48, 48, 0.1); }
-
-    /* ───────────────────────── Alarm Overlay ───────────────────────── */
-    .alarm-overlay {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 1000;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 32px;
-      padding: 24px;
-    }
-
-    .alarm-overlay.active {
-      display: flex;
-      animation: alarm-flash 0.6s ease-in-out infinite alternate;
-    }
-
-    @keyframes alarm-flash {
-      0%   { background: rgba(180, 20, 20, 0.92); }
-      100% { background: rgba(100, 8, 8, 0.96); }
-    }
-
-    .alarm-icon {
-      font-size: 64px;
-      animation: alarm-bounce 0.5s ease-in-out infinite alternate;
-    }
-
-    @keyframes alarm-bounce {
-      0%   { transform: scale(1); }
-      100% { transform: scale(1.15); }
-    }
-
-    .alarm-title {
-      font-size: 36px;
-      font-weight: 900;
-      letter-spacing: 3px;
-      text-transform: uppercase;
-      color: #fff;
-      text-shadow: 0 2px 20px rgba(0, 0, 0, 0.5);
-      text-align: center;
-    }
-
-    .alarm-direction {
-      font-family: var(--font-mono);
-      font-size: 28px;
-      font-weight: 700;
-      color: rgba(255, 255, 255, 0.9);
-      text-align: center;
-      display: flex;
-      align-items: center;
-      gap: 16px;
-    }
-
-    .alarm-direction .arrow {
-      font-size: 32px;
-      animation: arrow-pulse 0.4s ease-in-out infinite alternate;
-    }
-
-    @keyframes arrow-pulse {
-      0%   { opacity: 0.5; transform: translateX(-4px); }
-      100% { opacity: 1;   transform: translateX(4px);  }
-    }
-
-    .alarm-acknowledge {
-      padding: 20px 48px;
-      border: 3px solid #fff;
-      border-radius: var(--radius);
-      background: rgba(255, 255, 255, 0.15);
-      color: #fff;
-      font-family: var(--font-sans);
-      font-size: 18px;
-      font-weight: 800;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      cursor: pointer;
-      transition: all 0.15s ease;
-      backdrop-filter: blur(4px);
-      -webkit-backdrop-filter: blur(4px);
-    }
-
-    .alarm-acknowledge:hover { background: rgba(255, 255, 255, 0.25); }
-    .alarm-acknowledge:active { transform: scale(0.95); }
-
-    /* ───────────────────────── Responsive ───────────────────────── */
-    @media (max-height: 600px) {
-      .setup-header { margin-bottom: 20px; }
-      .setup-section { margin-bottom: 20px; }
-      .countdown-value { font-size: 56px; }
-      .fuel-panel { padding: 14px; }
-    }
-
-    @media (min-width: 768px) {
-      .setup-header h1 { font-size: 28px; }
-      .countdown-value { font-size: 88px; }
-    }
-  </style>
+  <link rel="stylesheet" href="styles.css">
 </head>
-<body>
+<body class="mode-basic">
 
   <!-- ═══════════════════ SETUP SCREEN ═══════════════════ -->
   <div id="setup-screen" class="screen active">
-    <div class="setup-header">
-      <h1>Fuel Tank Timer</h1>
-      <div class="subtitle">Cirrus SR22T G6</div>
-    </div>
-
-    <div class="setup-section">
-      <label>Starting Tank</label>
-      <div class="tank-selector">
-        <button class="tank-btn selected" data-tank="left" onclick="selectStartingTank('left')">
-          <span class="tank-label">LEFT</span>
-          <span class="tank-detail">46 U.S. GAL USABLE</span>
-        </button>
-        <button class="tank-btn" data-tank="right" onclick="selectStartingTank('right')">
-          <span class="tank-label">RIGHT</span>
-          <span class="tank-detail">46 U.S. GAL USABLE</span>
-        </button>
+    <div class="screen-inner">
+      <div class="setup-header">
+        <h1>Fuel Tank Timer</h1>
+        <div class="subtitle" id="setup-subtitle">Cirrus SR22T G6</div>
       </div>
-    </div>
 
-    <div class="setup-section">
-      <label>Switch Interval</label>
-      <div class="interval-stepper">
-        <button class="stepper-btn" onclick="adjustInterval(-5)">−</button>
-        <div class="interval-display">
-          <div class="value" id="interval-value">15</div>
-          <div class="unit">minutes</div>
+      <div class="setup-section">
+        <div class="segmented" id="mode-toggle">
+          <button class="seg-btn" data-mode="basic">Basic</button>
+          <button class="seg-btn" data-mode="advanced">Advanced</button>
         </div>
-        <button class="stepper-btn" onclick="adjustInterval(5)">+</button>
       </div>
-    </div>
 
-    <button class="start-btn" onclick="startTimer()">Start Timer</button>
+      <div class="setup-section advanced-only">
+        <span class="section-label">Aircraft</span>
+        <div class="aircraft-list" id="aircraft-list"></div>
+      </div>
+
+      <div class="setup-section">
+        <span class="section-label">Starting Tank</span>
+        <div class="tank-selector" id="start-tank-selector"></div>
+      </div>
+
+      <div class="setup-section">
+        <span class="section-label">Switch Interval</span>
+        <div class="interval-stepper">
+          <button class="stepper-btn" id="interval-minus" aria-label="Decrease interval">−</button>
+          <div class="interval-display">
+            <div class="value" id="interval-value">15</div>
+            <div class="unit">minutes</div>
+          </div>
+          <button class="stepper-btn" id="interval-plus" aria-label="Increase interval">+</button>
+        </div>
+      </div>
+
+      <div class="setup-section advanced-only">
+        <span class="section-label">Fuel on Board (U.S. gal)</span>
+        <div class="field-row">
+          <label class="field">
+            <span>Left</span>
+            <input type="number" id="setup-fuel-left" inputmode="decimal" min="0" step="any">
+          </label>
+          <label class="field">
+            <span>Right</span>
+            <input type="number" id="setup-fuel-right" inputmode="decimal" min="0" step="any">
+          </label>
+        </div>
+      </div>
+
+      <div class="setup-section advanced-only">
+        <span class="section-label">Fuel Flow (GPH)</span>
+        <label class="field">
+          <input type="number" id="setup-gph" inputmode="decimal" min="0" step="any">
+        </label>
+        <p class="hint">You can change it in flight — e.g. after leaning the mixture for cruise.</p>
+      </div>
+
+      <div class="setup-section advanced-only">
+        <span class="section-label">Switch Logic</span>
+        <div class="segmented" id="logic-toggle">
+          <button class="seg-btn" data-logic="alternate">Alternate</button>
+          <button class="seg-btn" data-logic="balance">Auto-balance</button>
+        </div>
+        <p class="hint" id="logic-hint"></p>
+      </div>
+
+      <div class="setup-section advanced-only" id="pump-setting">
+        <label class="switch-row">
+          <span>
+            <strong id="pump-setting-label">Boost pump reminder</strong>
+            <small>ON 30 s before each switch, OFF 30 s after</small>
+          </span>
+          <input type="checkbox" id="setup-pump">
+          <span class="switch"></span>
+        </label>
+      </div>
+
+      <button class="start-btn" id="start-btn">Start Timer</button>
+    </div>
   </div>
 
   <!-- ═══════════════════ TIMER SCREEN ═══════════════════ -->
   <div id="timer-screen" class="screen">
-    <div class="timer-screen-content">
+    <div class="screen-inner timer-screen-content">
 
       <!-- Fuel Selector Panel -->
       <div class="fuel-panel">
-        <div class="fuel-panel-title">Fuel Selector</div>
-        <div class="fuel-tanks">
-          <div class="fuel-tank active" id="tank-left">
-            <div class="tank-name">LEFT</div>
-            <div class="tank-capacity">46 U.S. GAL USABLE</div>
-            <div class="active-badge">● SELECTED</div>
-          </div>
-          <div class="fuel-tank inactive" id="tank-right">
-            <div class="tank-name">RIGHT</div>
-            <div class="tank-capacity">46 U.S. GAL USABLE</div>
-            <div class="active-badge">● SELECTED</div>
-          </div>
-        </div>
+        <div class="fuel-panel-title" id="fuel-panel-title">Fuel Selector</div>
+        <div class="fuel-tanks" id="fuel-tanks"></div>
         <div class="fuel-handle-container">
-          <div class="fuel-handle-track"></div>
-          <div class="fuel-handle left" id="fuel-handle"></div>
+          <div class="fuel-handle-track" id="fuel-handle-track"></div>
+          <div class="fuel-handle" id="fuel-handle"></div>
+        </div>
+
+        <div class="fuel-summary advanced-only">
+          <div class="imbalance" id="imbalance">Balanced</div>
+          <div class="fuel-totals">
+            <span>Total <strong id="total-fuel">0.0</strong> gal</span>
+            <span>Endurance <strong id="endurance">--</strong></span>
+          </div>
+          <div class="gph-row">
+            <button class="mini-btn" id="gph-minus" aria-label="Decrease fuel flow">−</button>
+            <button class="gph-value" id="gph-value">18.0 GPH</button>
+            <button class="mini-btn" id="gph-plus" aria-label="Increase fuel flow">+</button>
+          </div>
+          <button class="link-btn" id="edit-fuel-btn">Sync fuel with sim</button>
         </div>
       </div>
 
       <!-- Countdown -->
       <div class="countdown-container">
-        <div class="countdown-label">Next Switch In</div>
+        <div class="countdown-label" id="countdown-label">Next Switch In</div>
         <div class="countdown-value" id="countdown">15:00</div>
       </div>
 
@@ -628,13 +148,28 @@
         </div>
       </div>
 
+      <!-- Device status -->
+      <div class="status-chips">
+        <span class="chip" id="wake-chip">Screen lock</span>
+        <button class="chip" id="notify-chip">Alerts</button>
+      </div>
+
       <!-- Controls -->
       <div class="timer-controls">
-        <button class="ctrl-btn pause" id="pause-btn" onclick="togglePause()">Pause</button>
-        <button class="ctrl-btn stop" onclick="stopTimer()">Stop</button>
+        <button class="ctrl-btn pause" id="pause-btn">Pause</button>
+        <button class="ctrl-btn stop" id="stop-btn">Stop</button>
       </div>
 
     </div>
+  </div>
+
+  <!-- ═══════════════════ BANNER (pump / info) ═══════════════════ -->
+  <div class="banner" id="banner" hidden>
+    <div class="banner-text">
+      <div class="banner-title" id="banner-title"></div>
+      <div class="banner-detail" id="banner-detail"></div>
+    </div>
+    <button class="banner-dismiss" id="banner-dismiss">Done</button>
   </div>
 
   <!-- ═══════════════════ ALARM OVERLAY ═══════════════════ -->
@@ -646,308 +181,37 @@
       <span class="arrow">➜</span>
       <span id="alarm-to">RIGHT</span>
     </div>
-    <button class="alarm-acknowledge" onclick="acknowledgeAlarm()">Acknowledge</button>
+    <div class="alarm-detail" id="alarm-detail" hidden></div>
+    <button class="alarm-acknowledge" id="alarm-ack">Acknowledge</button>
+    <button class="alarm-secondary advanced-only" id="alarm-stay">Stay on LEFT</button>
   </div>
 
-  <script>
-    /* ═══════════════════════════════════════════════════════════
-       State
-       ═══════════════════════════════════════════════════════════ */
-    let currentTank = 'left';        // 'left' | 'right'
-    let intervalMinutes = 15;        // multiples of 5, min 5
-    let switchCount = 0;
-    let timerEndTime = 0;            // timestamp when timer fires
-    let elapsedStartTime = 0;        // timestamp when timer was first started
-    let pausedRemainingMs = 0;       // remaining ms when paused
-    let pausedElapsedMs = 0;         // elapsed ms accumulated before pause
-    let isPaused = false;
-    let isRunning = false;
-    let tickInterval = null;
-    let audioCtx = null;
-    let alarmInterval = null;
+  <!-- ═══════════════════ SYNC FUEL DIALOG ═══════════════════ -->
+  <dialog id="fuel-dialog">
+    <form method="dialog" id="fuel-form">
+      <h2>Sync with Sim</h2>
+      <p class="hint">Enter the values shown in the cockpit (MFD fuel page).</p>
+      <div class="field-row">
+        <label class="field">
+          <span>Left (gal)</span>
+          <input type="number" id="dlg-fuel-left" inputmode="decimal" min="0" step="any">
+        </label>
+        <label class="field">
+          <span>Right (gal)</span>
+          <input type="number" id="dlg-fuel-right" inputmode="decimal" min="0" step="any">
+        </label>
+      </div>
+      <label class="field">
+        <span>Fuel flow (GPH)</span>
+        <input type="number" id="dlg-gph" inputmode="decimal" min="0" step="any">
+      </label>
+      <div class="dialog-actions">
+        <button class="ctrl-btn" value="cancel" formnovalidate>Cancel</button>
+        <button class="ctrl-btn primary" value="save">Save</button>
+      </div>
+    </form>
+  </dialog>
 
-    /* ═══════════════════════════════════════════════════════════
-       Setup Screen Logic
-       ═══════════════════════════════════════════════════════════ */
-    function selectStartingTank(tank) {
-      currentTank = tank;
-      document.querySelectorAll('.tank-btn').forEach(btn => {
-        btn.classList.toggle('selected', btn.dataset.tank === tank);
-      });
-    }
-
-    function adjustInterval(delta) {
-      const newVal = intervalMinutes + delta;
-      if (newVal >= 5) {
-        intervalMinutes = newVal;
-        document.getElementById('interval-value').textContent = intervalMinutes;
-      }
-    }
-
-    /* ═══════════════════════════════════════════════════════════
-       Screen Navigation
-       ═══════════════════════════════════════════════════════════ */
-    function showScreen(id) {
-      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-      document.getElementById(id).classList.add('active');
-    }
-
-    /* ═══════════════════════════════════════════════════════════
-       Timer Logic (drift-compensated)
-       ═══════════════════════════════════════════════════════════ */
-    function startTimer() {
-      isRunning = true;
-      isPaused = false;
-      switchCount = 0;
-
-      updateFuelPanel();
-      showScreen('timer-screen');
-
-      document.getElementById('switch-count').textContent = '0';
-      document.getElementById('pause-btn').textContent = 'Pause';
-
-      const durationMs = intervalMinutes * 60 * 1000;
-      timerEndTime = Date.now() + durationMs;
-      elapsedStartTime = Date.now();
-      pausedElapsedMs = 0;
-
-      startTick();
-    }
-
-    function startTick() {
-      if (tickInterval) clearInterval(tickInterval);
-      tickInterval = setInterval(tick, 250); // tick every 250ms for smooth updates
-    }
-
-    function tick() {
-      if (!isRunning || isPaused) return;
-
-      const now = Date.now();
-      const remainingMs = timerEndTime - now;
-      const elapsedMs = now - elapsedStartTime + pausedElapsedMs;
-
-      // Update elapsed display
-      document.getElementById('elapsed-time').textContent = formatTime(Math.floor(elapsedMs / 1000));
-
-      if (remainingMs <= 0) {
-        // Timer fired!
-        document.getElementById('countdown').textContent = '00:00';
-        triggerAlarm();
-        return;
-      }
-
-      const remainingSecs = Math.ceil(remainingMs / 1000);
-      const totalSecs = intervalMinutes * 60;
-
-      document.getElementById('countdown').textContent = formatTime(remainingSecs);
-
-      // Color states
-      const countdownEl = document.getElementById('countdown');
-      countdownEl.classList.remove('warning', 'critical');
-      if (remainingSecs <= 30) {
-        countdownEl.classList.add('critical');
-      } else if (remainingSecs <= 60) {
-        countdownEl.classList.add('warning');
-      }
-    }
-
-    function togglePause() {
-      if (isPaused) {
-        // Resume
-        isPaused = false;
-        const durationMs = pausedRemainingMs;
-        timerEndTime = Date.now() + durationMs;
-        elapsedStartTime = Date.now();
-        document.getElementById('pause-btn').textContent = 'Pause';
-        startTick();
-      } else {
-        // Pause
-        isPaused = true;
-        pausedRemainingMs = timerEndTime - Date.now();
-        pausedElapsedMs += Date.now() - elapsedStartTime;
-        document.getElementById('pause-btn').textContent = 'Resume';
-        if (tickInterval) clearInterval(tickInterval);
-      }
-    }
-
-    function stopTimer() {
-      isRunning = false;
-      isPaused = false;
-      if (tickInterval) clearInterval(tickInterval);
-      stopAlarmSound();
-      document.getElementById('alarm-overlay').classList.remove('active');
-      document.getElementById('countdown').classList.remove('warning', 'critical');
-      showScreen('setup-screen');
-    }
-
-    function resetCountdown() {
-      const durationMs = intervalMinutes * 60 * 1000;
-      timerEndTime = Date.now() + durationMs;
-      elapsedStartTime = Date.now();
-
-      // Preserve total elapsed time
-      // pausedElapsedMs already accounts for all previous elapsed time
-      const totalElapsed = pausedElapsedMs + (Date.now() - elapsedStartTime);
-      // Actually, we need to track total elapsed across resets
-      // Let's just keep running from original start
-      // We store the elapsed from previous segments
-      pausedElapsedMs += 0; // elapsedStartTime is reset to now
-      // The elapsed calculation in tick() does: (now - elapsedStartTime) + pausedElapsedMs
-      // When we reset, we want to keep the total elapsed, so:
-      // totalElapsedBefore = (Date.now() - oldElapsedStartTime) + oldPausedElapsedMs
-      // After reset: elapsedStartTime = Date.now(), so (now - elapsedStartTime) = 0
-      // So we need pausedElapsedMs = totalElapsedBefore
-      // But we already updated elapsedStartTime... let's fix this:
-
-      document.getElementById('countdown').classList.remove('warning', 'critical');
-    }
-
-    /* ═══════════════════════════════════════════════════════════
-       Fuel Panel UI Update
-       ═══════════════════════════════════════════════════════════ */
-    function updateFuelPanel() {
-      const leftEl = document.getElementById('tank-left');
-      const rightEl = document.getElementById('tank-right');
-      const handleEl = document.getElementById('fuel-handle');
-
-      if (currentTank === 'left') {
-        leftEl.className = 'fuel-tank active';
-        rightEl.className = 'fuel-tank inactive';
-        handleEl.className = 'fuel-handle left';
-      } else {
-        leftEl.className = 'fuel-tank inactive';
-        rightEl.className = 'fuel-tank active';
-        handleEl.className = 'fuel-handle right';
-      }
-    }
-
-    /* ═══════════════════════════════════════════════════════════
-       Alarm
-       ═══════════════════════════════════════════════════════════ */
-    function triggerAlarm() {
-      if (tickInterval) clearInterval(tickInterval);
-
-      const nextTank = currentTank === 'left' ? 'right' : 'left';
-      document.getElementById('alarm-from').textContent = currentTank.toUpperCase();
-      document.getElementById('alarm-to').textContent = nextTank.toUpperCase();
-      document.getElementById('alarm-overlay').classList.add('active');
-
-      startAlarmSound();
-    }
-
-    function acknowledgeAlarm() {
-      // Stop alarm
-      stopAlarmSound();
-      document.getElementById('alarm-overlay').classList.remove('active');
-
-      // Auto-switch tank
-      const prevTank = currentTank;
-      currentTank = currentTank === 'left' ? 'right' : 'left';
-      switchCount++;
-      document.getElementById('switch-count').textContent = switchCount;
-      updateFuelPanel();
-
-      // Track elapsed properly: store total elapsed so far
-      // We don't reset elapsed — it keeps counting from original start
-      // pausedElapsedMs tracks time from all previous segments
-      // When alarm fired, the timer was at 0, so total elapsed includes
-      // time from elapsedStartTime to alarm fire time
-      const elapsedSoFar = Date.now() - elapsedStartTime + pausedElapsedMs;
-      pausedElapsedMs = elapsedSoFar;
-      elapsedStartTime = Date.now();
-
-      // Reset countdown
-      const durationMs = intervalMinutes * 60 * 1000;
-      timerEndTime = Date.now() + durationMs;
-      document.getElementById('countdown').classList.remove('warning', 'critical');
-
-      // Restart tick
-      startTick();
-    }
-
-    /* ═══════════════════════════════════════════════════════════
-       Audio — Web Audio API Beep Generator
-       ═══════════════════════════════════════════════════════════ */
-    function getAudioContext() {
-      if (!audioCtx) {
-        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      }
-      return audioCtx;
-    }
-
-    function playBeep(frequency, durationMs) {
-      const ctx = getAudioContext();
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-
-      osc.type = 'square';
-      osc.frequency.setValueAtTime(frequency, ctx.currentTime);
-
-      gain.gain.setValueAtTime(0.3, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + durationMs / 1000);
-
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-
-      osc.start(ctx.currentTime);
-      osc.stop(ctx.currentTime + durationMs / 1000);
-    }
-
-    function startAlarmSound() {
-      // Play a repeating two-tone beep pattern (like a cockpit warning)
-      const pattern = () => {
-        playBeep(880, 150);   // High beep
-        setTimeout(() => playBeep(660, 150), 200);  // Low beep
-      };
-
-      pattern(); // Play immediately
-      alarmInterval = setInterval(pattern, 800); // Repeat every 800ms
-    }
-
-    function stopAlarmSound() {
-      if (alarmInterval) {
-        clearInterval(alarmInterval);
-        alarmInterval = null;
-      }
-    }
-
-    /* ═══════════════════════════════════════════════════════════
-       Helpers
-       ═══════════════════════════════════════════════════════════ */
-    function formatTime(totalSeconds) {
-      const mins = Math.floor(totalSeconds / 60);
-      const secs = totalSeconds % 60;
-      return String(mins).padStart(2, '0') + ':' + String(secs).padStart(2, '0');
-    }
-
-    /* ═══════════════════════════════════════════════════════════
-       Keyboard Shortcuts
-       ═══════════════════════════════════════════════════════════ */
-    document.addEventListener('keydown', (e) => {
-      if (e.code === 'Space' && isRunning) {
-        e.preventDefault();
-        // If alarm is active, acknowledge it
-        if (document.getElementById('alarm-overlay').classList.contains('active')) {
-          acknowledgeAlarm();
-        } else {
-          togglePause();
-        }
-      }
-      if (e.code === 'Escape' && isRunning) {
-        stopTimer();
-      }
-    });
-
-    /* ═══════════════════════════════════════════════════════════
-       Service Worker Registration (PWA)
-       ═══════════════════════════════════════════════════════════ */
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js').catch(err => {
-          console.error('ServiceWorker registration failed: ', err);
-        });
-      });
-    }
-  </script>
+  <script src="app.js"></script>
 </body>
 </html>
